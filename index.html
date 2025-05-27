@@ -12,7 +12,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>Gelir Vergisi Hesaplayıcı</h1>
+        <header>
+            <select id="languageSelector" style="position: absolute; top: 20px; right: 20px; padding: 8px;">
+                <option value="tr">Türkçe</option>
+                <option value="en">English</option>
+            </select>
+            <h1>Gelir Vergisi Hesaplayıcı</h1>
+        </header>
         <label for="income">Yıllık Gelir (TL):</label>
         <input type="number" id="income" placeholder="Örnek: 500000">
         <button onclick="calculateTax()">Hesapla</button>
@@ -39,6 +45,37 @@
             { limit: Infinity, oran: 0.40 }
         ];
 
+        const languageStrings = {
+            tr: {
+                calculate: "Hesapla",
+                incomePlaceholder: "Yıllık gelirinizi girin",
+                taxResult: "Ödemeniz Gereken Vergi",
+                alertEmpty: "Lütfen gelir miktarını giriniz!",
+                alertInvalid: "Geçerli bir sayı giriniz!"
+            },
+            en: {
+                calculate: "Calculate",
+                incomePlaceholder: "Enter your annual income",
+                taxResult: "Tax Amount to Pay",
+                alertEmpty: "Please enter income amount!",
+                alertInvalid: "Please enter a valid number!"
+            }
+        };
+
+        function updateLanguage(lang) {
+            document.getElementById('calculateBtn').textContent = languageStrings[lang].calculate;
+            document.getElementById('income').placeholder = languageStrings[lang].incomePlaceholder;
+            document.querySelector('h1').textContent = lang === 'en' 
+                ? 'Income Tax Calculator' 
+                : 'Gelir Vergisi Hesaplayıcı';
+        }
+
+        // Dil seçici event listener
+        document.getElementById('languageSelector').addEventListener('change', (e) => {
+            const lang = e.target.value;
+            updateLanguage(lang);
+            document.querySelector('#result').textContent = '';
+        });
         function calculateTax() {
             const incomeValue = document.getElementById('income').value;
             const income = parseFloat(incomeValue.replace(/[.]/g, ''));
