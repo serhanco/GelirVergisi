@@ -31,6 +31,14 @@
             { limit: Infinity, rate: 0.40, base: 1410000 }
         ];
 
+        const VERGI_DILIMLERI_2025 = [
+            { limit: 240_000, oran: 0.15 },
+            { limit: 520_000, oran: 0.20 },
+            { limit: 1_200_000, oran: 0.27 },
+            { limit: 5_800_000, oran: 0.35 },
+            { limit: Infinity, oran: 0.40 }
+        ];
+
         function calculateTax() {
             const incomeValue = document.getElementById('income').value;
             const income = parseFloat(incomeValue.replace(/[.]/g, ''));
