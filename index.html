@@ -8,6 +8,44 @@
         .container { background: #f5f5f5; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         input, button { padding: 8px; margin: 10px 0; }
         .result { margin-top: 20px; background: white; padding: 15px; border-radius: 5px; }
+        
+        /* Gauge Chart Styles - BU KISIM SİLİNECEK */
+        /* .gauge-container, .gauge, .gauge-bg, ... tüm eski gauge stilleri */
+        
+        /* Horizontal Gauge Styles - YENİ EKLENECEK */
+        .horizontal-gauge-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+            padding: 3px; /* Kenarlık gibi görünmesi için */
+            box-sizing: border-box;
+        }
+
+        .horizontal-gauge-bar {
+            height: 25px;
+            background: linear-gradient(to right, #4CAF50, #FFEB3B, #FF9800, #F44336, #8B0000);
+            width: 0%; /* JavaScript ile güncellenecek */
+            border-radius: 3px;
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.8s ease-out;
+            position: relative; /* Metin için */
+        }
+
+        .horizontal-gauge-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: #333; /* Veya çubuk rengine göre dinamik */
+            font-size: 14px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.7);
+        }
     </style>
 </head>
 <body>
@@ -17,18 +55,30 @@
                 <option value="tr">Türkçe</option>
                 <option value="en">English</option>
             </select>
-            <h1>Gelir Vergisi Hesaplayıcı</h1>
+            <h1 id="title">Gelir Vergisi Hesaplayıcı</h1>
         </header>
-        <label for="income">Yıllık Gelir (TL):</label>
+        <label for="income" id="incomeLabel">Yıllık Gelir (TL):</label>
         <input type="number" id="income" placeholder="Örnek: 500000">
-        <button onclick="calculateTax()">Hesapla</button>
+        <button id="calculateBtn" onclick="calculateTax()">Hesapla</button>
         
         <div class="result" id="taxAmount"></div>
         <div class="result" id="effectiveRate"></div>
+        
+        <!-- Gauge Chart - ESKİ GAUGE SİLİNECEK -->
+        <!-- <div class="gauge-container" id="gaugeContainer" style="display: none;"> ... </div> -->
+
+        <!-- Horizontal Gauge - YENİ EKLENECEK -->
+        <div class="horizontal-gauge-container" id="horizontalGaugeContainer" style="display: none;">
+            <div class="horizontal-gauge-bar" id="horizontalGaugeBar">
+                <span class="horizontal-gauge-text" id="horizontalGaugeText">0%</span>
+            </div>
+        </div>
+        
         <div class="result" id="calculationSteps"></div>
     </div>
 
     <script>
+        // Orijinal vergi dilimleri korundu
         const taxBrackets = [
             { limit: 158000, rate: 0.15, base: 0 },
             { limit: 330000, rate: 0.20, base: 23700 },
@@ -37,56 +87,138 @@
             { limit: Infinity, rate: 0.40, base: 1410000 }
         ];
 
-        const VERGI_DILIMLERI_2025 = [
-            { limit: 240_000, oran: 0.15 },
-            { limit: 520_000, oran: 0.20 },
-            { limit: 1_200_000, oran: 0.27 },
-            { limit: 5_800_000, oran: 0.35 },
-            { limit: Infinity, oran: 0.40 }
-        ];
-
         const languageStrings = {
             tr: {
+                title: "Gelir Vergisi Hesaplayıcı",
                 calculate: "Hesapla",
-                incomePlaceholder: "Yıllık gelirinizi girin",
-                taxResult: "Ödemeniz Gereken Vergi",
-                alertEmpty: "Lütfen gelir miktarını giriniz!",
-                alertInvalid: "Geçerli bir sayı giriniz!"
+                incomeLabel: "Yıllık Gelir (TL):",
+                incomePlaceholder: "Örnek: 500000",
+                taxAmount: "Ödenecek Vergi",
+                effectiveRate: "Etkin Vergi Oranı",
+                calculationDetails: "Hesaplama Detayları",
+                firstBracket: "İlk",
+                forAmount: "için",
+                between: "arasındaki",
+                alertInvalid: "Lütfen geçerli bir pozitif sayı giriniz",
+                gaugeTitle: "Etkin Vergi Oranı"
             },
             en: {
+                title: "Income Tax Calculator",
                 calculate: "Calculate",
-                incomePlaceholder: "Enter your annual income",
-                taxResult: "Tax Amount to Pay",
-                alertEmpty: "Please enter income amount!",
-                alertInvalid: "Please enter a valid number!"
+                incomeLabel: "Annual Income (TRY):",
+                incomePlaceholder: "Example: 500000",
+                taxAmount: "Tax Amount to Pay",
+                effectiveRate: "Effective Tax Rate",
+                calculationDetails: "Calculation Details",
+                firstBracket: "First",
+                forAmount: "for",
+                between: "between",
+                alertInvalid: "Please enter a valid positive number",
+                gaugeTitle: "Effective Tax Rate"
             }
         };
 
         function updateLanguage(lang) {
-            document.getElementById('calculateBtn').textContent = languageStrings[lang].calculate;
-            document.getElementById('income').placeholder = languageStrings[lang].incomePlaceholder;
-            document.querySelector('h1').textContent = lang === 'en' 
-                ? 'Income Tax Calculator' 
-                : 'Gelir Vergisi Hesaplayıcı';
+            const strings = languageStrings[lang];
+            
+            document.getElementById('title').textContent = strings.title;
+            document.getElementById('calculateBtn').textContent = strings.calculate;
+            document.getElementById('incomeLabel').textContent = strings.incomeLabel;
+            document.getElementById('income').placeholder = strings.incomePlaceholder;
+            // document.getElementById('gaugeTitle').textContent = strings.gaugeTitle; // Bu satır kaldırılacak veya güncellenecek
+            
+            // Sonuçları temizle
+            document.getElementById('taxAmount').innerHTML = '';
+            document.getElementById('effectiveRate').innerHTML = '';
+            document.getElementById('calculationSteps').innerHTML = '';
+            document.getElementById('horizontalGaugeContainer').style.display = 'none';
+
+            // Eğer gelir alanında bir değer varsa, dil değiştiğinde hesaplamayı yeniden yap
+            // Bu sayede gösterge ve diğer sonuçlar da yeni dile göre güncellenir.
+            const incomeInput = document.getElementById('income');
+            if (incomeInput.value) {
+                calculateTax();
+            }
         }
 
-        // Dil seçici event listener
-        document.getElementById('languageSelector').addEventListener('change', (e) => {
-            const lang = e.target.value;
-            updateLanguage(lang);
-            document.querySelector('#result').textContent = '';
-        });
-        function calculateTax() {
-            const incomeValue = document.getElementById('income').value;
-            const income = parseFloat(incomeValue.replace(/[.]/g, ''));
+        // updateGauge fonksiyonu YENİDEN YAZILACAK
+        // updateGauge fonksiyonu güncellenecek
+        function updateGauge(effectiveRate) {
+            const bar = document.getElementById('horizontalGaugeBar');
+            const text = document.getElementById('horizontalGaugeText');
+            const container = document.getElementById('horizontalGaugeContainer');
 
-            if (!income || income < 0) {
-                alert("Lütfen geçerli bir pozitif sayı giriniz");
+            // Efektif oranı 0 ile 40 arasında sınırla, çünkü maksimum vergi oranı %40
+            // ve bu durumda bar %100 dolu olacak.
+            let normalizedRate = Math.max(0, Math.min(effectiveRate, 40));
+            
+            // Bar'ın doluluk oranını hesapla (normalizedRate / 40 * 100)
+            let barPercentage = (normalizedRate / 40) * 100;
+            // Eğer efektif oran 40'ın üzerindeyse bar %100 dolu olsun
+            if (effectiveRate > 40) {
+                barPercentage = 100;
+            }
+
+            bar.style.width = `${barPercentage}%`;
+            text.textContent = `${effectiveRate.toFixed(2)}%`;
+
+            // Renkleri efektif orana göre dinamik olarak ayarlayabiliriz
+            if (effectiveRate <= 15) {
+                bar.style.background = '#4CAF50'; // Yeşil
+            } else if (effectiveRate <= 20) {
+                bar.style.background = '#FFEB3B'; // Sarı
+            } else if (effectiveRate <= 27) {
+                bar.style.background = '#FFC107'; // Amber
+            } else if (effectiveRate <= 35) {
+                bar.style.background = '#FF9800'; // Turuncu
+            } else { // 35 üzeri (40 ve yukarısı dahil)
+                bar.style.background = '#F44336'; // Kırmızı (veya #8B0000 Bordo)
+            }
+            
+            // Metin rengini çubuk rengine göre ayarlama
+            if (effectiveRate > 15 && effectiveRate <= 27) { // Sarı ve Amber için koyu metin
+                 text.style.color = '#333';
+            } else {
+                 text.style.color = 'white';
+            }
+
+            container.style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialLang = document.getElementById('languageSelector').value || 'tr';
+            updateLanguage(initialLang);
+            
+            document.getElementById('languageSelector').addEventListener('change', function(e) {
+                const lang = e.target.value;
+                updateLanguage(lang);
+            });
+
+            // Gelir giriş alanını formatlamak için event listener
+            const incomeInput = document.getElementById('income');
+            incomeInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                // Sadece rakamları koru, binlik ayırıcıları ve ondalık ayracını kaldır
+                // Kullanıcı girişi sırasında formatlama yapma, sadece hesaplama anında yap.
+                e.target.value = value.replace(/[^0-9]/g, ''); // Sadece rakamları tut
+            });
+        });
+
+        // Orijinal hesaplama fonksiyonu korundu
+        function calculateTax() {
+            const lang = document.getElementById('languageSelector').value;
+            const strings = languageStrings[lang];
+            const incomeValue = document.getElementById('income').value;
+            // Hesaplama yaparken formatlanmış değeri sayıya çevir
+            const income = parseFloat(incomeValue); // Doğrudan sayıya çevir
+
+            if (isNaN(income) || income < 0) { // isNaN kontrolü eklendi
+                alert(strings.alertInvalid);
                 return;
             }
 
             let tax = 0;
-            let explanation = "Hesaplama Detayları:<br>";
+            let explanation = `${strings.calculationDetails}:<br>`;
             
             for(let i = 0; i < taxBrackets.length; i++) {
                 const bracket = taxBrackets[i];
@@ -98,21 +230,24 @@
                     
                     if(i === 0) {
                         tax = bracketTax;
-                        explanation += `• İlk ${bracket.limit.toLocaleString('tr-TR')} TL için %${bracket.rate*100}: <strong>${bracketTax.toLocaleString('tr-TR')} TL</strong><br>`;
+                        explanation += `• ${strings.firstBracket} ${bracket.limit.toLocaleString('tr-TR')} TL ${strings.forAmount} %${bracket.rate*100}: <strong>${bracketTax.toLocaleString('tr-TR')} TL</strong><br>`;
                     } else {
                         tax = bracket.base + bracketTax;
-                        explanation += `• ${prevLimit.toLocaleString('tr-TR')} TL ile ${bracket.limit.toLocaleString('tr-TR')} TL arasındaki ${taxableAmount.toLocaleString('tr-TR')} TL için %${bracket.rate*100}: <strong>${bracketTax.toLocaleString('tr-TR')} TL</strong><br>`;
+                        explanation += `• ${prevLimit.toLocaleString('tr-TR')} TL ile ${bracket.limit.toLocaleString('tr-TR')} TL ${strings.between} ${taxableAmount.toLocaleString('tr-TR')} TL ${strings.forAmount} %${bracket.rate*100}: <strong>${bracketTax.toLocaleString('tr-TR')} TL</strong><br>`;
                     }
                 }
             }
 
-            const effectiveRate = income > 0 ? (tax / income * 100).toFixed(2) : 0;
+            const effectiveRate = income > 0 ? (tax / income * 100) : 0;
             
             document.getElementById('taxAmount').innerHTML = 
-                `Ödenecek Vergi: ${tax.toLocaleString('tr-TR')} TL`;
+                `${strings.taxAmount}: ${tax.toLocaleString('tr-TR')} TL`;
             document.getElementById('effectiveRate').innerHTML = 
-                `Etkin Vergi Oranı: %${effectiveRate}`;
+                `${strings.effectiveRate}: %${effectiveRate.toFixed(2)}`;
             document.getElementById('calculationSteps').innerHTML = explanation;
+            
+            // Gauge'i güncelle
+            updateGauge(effectiveRate);
         }
     </script>
 </body>
