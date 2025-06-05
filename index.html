@@ -63,6 +63,7 @@
         
         <div class="result" id="taxAmount"></div>
         <div class="result" id="effectiveRate"></div>
+        <div class="result" id="netIncome"></div>
         
         <!-- Gauge Chart - ESKİ GAUGE SİLİNECEK -->
         <!-- <div class="gauge-container" id="gaugeContainer" style="display: none;"> ... </div> -->
@@ -100,7 +101,8 @@
                 forAmount: "için",
                 between: "arasındaki",
                 alertInvalid: "Lütfen geçerli bir pozitif sayı giriniz",
-                gaugeTitle: "Etkin Vergi Oranı"
+                gaugeTitle: "Etkin Vergi Oranı",
+                netIncome: "Net Gelir"
             },
             en: {
                 title: "Income Tax Calculator",
@@ -114,7 +116,8 @@
                 forAmount: "for",
                 between: "between",
                 alertInvalid: "Please enter a valid positive number",
-                gaugeTitle: "Effective Tax Rate"
+                gaugeTitle: "Effective Tax Rate",
+                netIncome: "Net Income"
             }
         };
 
@@ -130,6 +133,7 @@
             // Sonuçları temizle
             document.getElementById('taxAmount').innerHTML = '';
             document.getElementById('effectiveRate').innerHTML = '';
+    document.getElementById('netIncome').innerHTML = ''; // Clear net income display
             document.getElementById('calculationSteps').innerHTML = '';
             document.getElementById('horizontalGaugeContainer').style.display = 'none';
 
@@ -244,6 +248,12 @@
                 `${strings.taxAmount}: ${tax.toLocaleString('tr-TR')} TL`;
             document.getElementById('effectiveRate').innerHTML = 
                 `${strings.effectiveRate}: %${effectiveRate.toFixed(2)}`;
+
+            // Net geliri hesapla ve göster
+            const netIncomeValue = income - tax;
+            document.getElementById('netIncome').innerHTML =
+                `${strings.netIncome}: ${netIncomeValue.toLocaleString('tr-TR')} TL`;
+
             document.getElementById('calculationSteps').innerHTML = explanation;
             
             // Gauge'i güncelle
